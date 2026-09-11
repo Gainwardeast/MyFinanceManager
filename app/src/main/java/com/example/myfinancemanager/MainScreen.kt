@@ -59,41 +59,17 @@ fun MainScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Круговая диаграмма
-                PieChart(
-                    data = pieChartData,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // Доходы
-                IncomeSection(
-                    currentIncome = financeData.monthlyIncome,
-                    onIncomeUpdate = { viewModel.updateMonthlyIncome(it) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // Обязательные расходы
-                FixedExpensesSection(
-                    expenses = financeData.fixedExpenses,
-                    onAddExpense = { name, amount -> viewModel.addFixedExpense(name, amount) },
-                    onRemoveExpense = { id -> viewModel.removeFixedExpense(id) },
-                    onTogglePaid = { id -> viewModel.toggleFixedExpensePaid(id) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // Текущие расходы
-                CurrentExpensesSection(
-                    expenses = financeData.currentExpenses,
-                    onAddExpense = { name, amount -> viewModel.addCurrentExpense(name, amount) },
-                    onRemoveExpense = { id -> viewModel.removeCurrentExpense(id) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
                 // Информация о балансе
                 val totalFixed = financeData.fixedExpenses.sumOf { it.amount }
                 val totalCurrent = financeData.currentExpenses.sumOf { it.amount }
                 val totalExpenses = totalFixed + totalCurrent
                 val balance = financeData.monthlyIncome - totalExpenses
+
+                // Круговая диаграмма
+                PieChart(
+                    data = pieChartData,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -136,6 +112,30 @@ fun MainScreen(
                         }
                     }
                 }
+
+                // Обязательные расходы
+                FixedExpensesSection(
+                    expenses = financeData.fixedExpenses,
+                    onAddExpense = { name, amount -> viewModel.addFixedExpense(name, amount) },
+                    onRemoveExpense = { id -> viewModel.removeFixedExpense(id) },
+                    onTogglePaid = { id -> viewModel.toggleFixedExpensePaid(id) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Текущие расходы
+                CurrentExpensesSection(
+                    expenses = financeData.currentExpenses,
+                    onAddExpense = { name, amount -> viewModel.addCurrentExpense(name, amount) },
+                    onRemoveExpense = { id -> viewModel.removeCurrentExpense(id) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Доходы
+                IncomeSection(
+                    currentIncome = financeData.monthlyIncome,
+                    onIncomeUpdate = { viewModel.updateMonthlyIncome(it) },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
 
