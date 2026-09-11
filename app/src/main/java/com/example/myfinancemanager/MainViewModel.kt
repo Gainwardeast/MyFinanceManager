@@ -7,9 +7,11 @@ import com.example.myfinancemanager.model.ExpenseCategory
 import com.example.myfinancemanager.model.FinanceData
 import com.example.myfinancemanager.model.FixedExpense
 import com.example.myfinancemanager.repository.FinanceRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
@@ -40,7 +42,7 @@ class MainViewModel(
     }
 
     private fun loadData() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _isLoading.value = true
             try {
                 combine(
@@ -52,8 +54,9 @@ class MainViewModel(
                 }.collect()
             } catch (e: Exception) {
                 _error.value = "Ошибка загрузки данных: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
-            _isLoading.value = false
         }
     }
 

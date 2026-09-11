@@ -1,15 +1,25 @@
 package com.example.myfinancemanager.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,12 +46,13 @@ fun PieChart(
 
     val total = data.sumOf { it.amount }
     val colors = data.map { Color(it.color) }
+    val totalAmount = String.format("%.0f", total)
 
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Диаграмма
+        // === ДИАГРАММА ===
         Box(
             modifier = Modifier
                 .size(250.dp)
@@ -49,9 +60,25 @@ fun PieChart(
             contentAlignment = Alignment.Center
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                var startAngle = -90f
-                val radius = size.minDimension / 2f
-                val strokeWidth = radius * 0.8f
+                // Размер холста
+                val canvasSize = size.minDimension
+                val strokeWidth = canvasSize * 0.75f  // толщина обводки = 25% диаметра
+                val radius = (canvasSize - strokeWidth) / 2f  // радиус центра окружности
+
+                // Центр холста
+                val center = Offset(
+                    x = size.width / 2f,
+                    y = size.height / 2f
+                )
+
+                // Top-left квадрата, в который вписывается окружность
+                val arcSize = Size(radius * 2f, radius * 2f)
+                val topLeft = Offset(
+                    x = center.x - radius,
+                    y = center.y - radius
+                )
+
+                var startAngle = -90f  // начинаем сверху
 
                 data.forEachIndexed { index, category ->
                     val sweepAngle = (category.amount / total * 360f).toFloat()
@@ -61,23 +88,19 @@ fun PieChart(
                         startAngle = startAngle,
                         sweepAngle = sweepAngle,
                         useCenter = false,
-                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-                        topLeft = Offset(
-                            x = (size.width - strokeWidth) / 2f,
-                            y = (size.height - strokeWidth) / 2f
-                        ),
-                        size = androidx.compose.ui.geometry.Size(strokeWidth, strokeWidth)
+                        topLeft = topLeft,
+                        size = arcSize,
+                        style = Stroke(width = strokeWidth)
+                        // Без cap = Round — края сегментов будут ровные
                     )
                     startAngle += sweepAngle
                 }
             }
 
             // Центральный текст
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "₽${String.format("%.0f", total)}",
+                    text = "₽$totalAmount",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -89,30 +112,27 @@ fun PieChart(
             }
         }
 
-        // Легенда
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // === ЛЕГЕНДА ===
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             data.forEachIndexed { index, category ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row {
-                        Box(
-                            modifier = Modifier
-                                .size(12.dp)
-                                .padding(end = 8.dp)
-                        ) {
-                            Canvas(
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                drawCircle(color = colors[index % colors.size])
-                            }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Цветной кружок
+                        Canvas(modifier = Modifier.size(12.dp)) {
+                            drawCircle(color = colors[index % colors.size])
                         }
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = category.name,
                             fontSize = 14.sp,

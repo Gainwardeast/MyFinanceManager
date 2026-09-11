@@ -7,19 +7,18 @@ import com.example.myfinancemanager.model.FinanceData
 import com.example.myfinancemanager.model.FixedExpense
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 
 interface FinanceRepository {
     fun getFinanceData(): Flow<FinanceData>
-    fun getCategoriesForPieChartFlow(): Flow<List<ExpenseCategory>> // <-- Новый метод
+    fun getCategoriesForPieChart(): Flow<List<ExpenseCategory>> // <-- теперь Flow!
     suspend fun updateMonthlyIncome(amount: Double)
     suspend fun addFixedExpense(expense: FixedExpense)
     suspend fun removeFixedExpense(id: Int)
     suspend fun toggleFixedExpensePaid(id: Int)
     suspend fun addCurrentExpense(expense: CurrentExpense)
     suspend fun removeCurrentExpense(id: Int)
-    suspend fun getCategoriesForPieChart(): List<ExpenseCategory> // Оставляем для других нужд
 }
 
 class MockFinanceRepository : FinanceRepository {
@@ -48,18 +47,24 @@ class MockFinanceRepository : FinanceRepository {
     private var nextCurrentId = 5
 
     override fun getFinanceData(): Flow<FinanceData> {
-        return MutableStateFlow(
-            FinanceData(
-                monthlyIncome = monthlyIncome.value,
-                fixedExpenses = fixedExpenses.value,
-                currentExpenses = currentExpenses.value
+        return flow {
+            emit(
+                FinanceData(
+                    monthlyIncome = monthlyIncome.value,
+                    fixedExpenses = fixedExpenses.value,
+                    currentExpenses = currentExpenses.value
+                )
             )
-        )
+        }
     }
 
-    // НОВЫЙ МЕТОД: возвращает Flow для диаграммы
-    override suspend fun getCategoriesForPieChartFlow(): Flow<List<ExpenseCategory>> {
-        return MutableStateFlow(getCategoriesForPieChart())
+    // Возвращает Flow — теперь combine будет работать!
+    override fun getCategoriesForPieChart(): Flow<List<ExpenseCategory>> {
+        return flow {
+            emit(
+                buildCategories()
+            )
+        }
     }
 
     override suspend fun updateMonthlyIncome(amount: Double) {
@@ -98,13 +103,13 @@ class MockFinanceRepository : FinanceRepository {
         }
     }
 
-    override suspend fun getCategoriesForPieChart(): List<ExpenseCategory> {
-        val allExpenses = fixedExpenses.value.map {
+    // Вспомогательная функция для сборки категорий
+    private fun buildCategories(): List<ExpenseCategory> {
+        return fixedExpenses.value.map {
             ExpenseCategory(it.name, it.amount, getColorForCategory(it.name))
         } + currentExpenses.value.map {
             ExpenseCategory(it.name, it.amount, getColorForCategory(it.name))
         }
-        return allExpenses
     }
 
     private fun getColorForCategory(name: String): Long {

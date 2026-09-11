@@ -67,10 +67,10 @@ fun FixedExpensesSection(
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
             } else {
-                LazyColumn(
+                Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    items(expenses) { expense ->
+                    expenses.forEach { expense ->
                         FixedExpenseItem(
                             expense = expense,
                             onTogglePaid = { onTogglePaid(expense.id) },
