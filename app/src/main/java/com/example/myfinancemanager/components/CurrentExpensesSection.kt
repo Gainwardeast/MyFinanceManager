@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myfinancemanager.formatDateHuman
 import com.example.myfinancemanager.model.CurrentExpense
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,7 +132,7 @@ fun CurrentExpenseItem(
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = expense.date,
+                    text = formatDateHuman(expense.date),
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

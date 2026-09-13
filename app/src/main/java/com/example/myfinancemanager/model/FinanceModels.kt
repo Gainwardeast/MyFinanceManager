@@ -23,5 +23,5 @@ data class CurrentExpense(
     val id: Int,
     val name: String,
     val amount: Double,
-    val date: String = "Сегодня"
+    val date: Long = System.currentTimeMillis()
 )

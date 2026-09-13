@@ -12,13 +12,15 @@ import com.example.myfinancemanager.ui.FinancePlannerTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val app = application as MainApplication
+
         setContent {
             FinancePlannerTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen()
+                    MainScreen(repository = app.financeRepository)
                 }
             }
         }

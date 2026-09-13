@@ -7,11 +7,12 @@ import com.example.myfinancemanager.repository.FinanceRepository
 class MainViewModelFactory(
     private val repository: FinanceRepository
 ) : ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
             return MainViewModel(repository) as T
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")
     }
 }

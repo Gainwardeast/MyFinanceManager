@@ -5,33 +5,61 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myfinancemanager.components.CurrentExpensesSection
 import com.example.myfinancemanager.components.FixedExpensesSection
 import com.example.myfinancemanager.components.IncomeSection
+import com.example.myfinancemanager.components.MonthSelector
+import com.example.myfinancemanager.components.MonthYearPickerDialog
 import com.example.myfinancemanager.components.PieChart
-import com.example.myfinancemanager.repository.MockFinanceRepository
+import com.example.myfinancemanager.repository.FinanceRepository
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    repository: FinanceRepository,
     viewModel: MainViewModel = viewModel(
-        factory = MainViewModelFactory(MockFinanceRepository())
-    )
+        factory = MainViewModelFactory(repository)
+    ),
 ) {
-    val financeData by viewModel.financeData.collectAsState()
-    val pieChartData by viewModel.pieChartData.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val error by viewModel.error.collectAsState()
+    val state by viewModel.state.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var showMonthPicker by remember { mutableStateOf(false) }
+
+    if (showMonthPicker) {
+        MonthYearPickerDialog(
+            initialYear = state.selectedYear,
+            initialMonthIndex = state.selectedMonthIndex,
+            onDismiss = { showMonthPicker = false },
+            onConfirm = { year, monthIndex ->
+                viewModel.selectMonth(year, monthIndex)
+                showMonthPicker = false
+            }
+        )
+    }
+
+    LaunchedEffect(state.error) {
+        state.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
 
     Scaffold(
         topBar = {
-            @OptIn(ExperimentalMaterial3Api::class)
             TopAppBar(
                 title = { Text("📊 Планировщик финансов") },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -39,9 +67,10 @@ fun MainScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        if (isLoading) {
+        if (state.isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -51,6 +80,8 @@ fun MainScreen(
                 CircularProgressIndicator()
             }
         } else {
+            val financeData = state.financeData
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -59,22 +90,27 @@ fun MainScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Информация о балансе
-                val totalFixed = financeData.fixedExpenses.sumOf { it.amount }
-                val totalCurrent = financeData.currentExpenses.sumOf { it.amount }
-                val totalExpenses = totalFixed + totalCurrent
-                val balance = financeData.monthlyIncome - totalExpenses
 
-                // Круговая диаграмма
+                // 0. Выбор месяца
+                MonthSelector(
+                    year = state.selectedYear,
+                    monthIndex = state.selectedMonthIndex,
+                    onPrevious = { viewModel.previousMonth() },
+                    onNext = { viewModel.nextMonth() },
+                    onSelectClick = { showMonthPicker = true }
+                )
+
+                // 1. Диаграмма
                 PieChart(
-                    data = pieChartData,
+                    data = state.pieChartData,
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                // 2. Баланс
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (balance >= 0)
+                        containerColor = if (state.balance >= 0)
                             MaterialTheme.colorScheme.secondaryContainer
                         else
                             MaterialTheme.colorScheme.errorContainer
@@ -93,9 +129,9 @@ fun MainScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "₽${String.format("%,.0f", balance)}",
+                                text = "₽${String.format("%,.0f", state.balance)}",
                                 fontSize = 24.sp,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                fontWeight = FontWeight.Bold
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
@@ -105,15 +141,15 @@ fun MainScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "₽${String.format("%,.0f", totalExpenses)}",
+                                text = "₽${String.format("%,.0f", state.totalExpense)}",
                                 fontSize = 20.sp,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
                 }
 
-                // Обязательные расходы
+                // 3. Обязательные расходы
                 FixedExpensesSection(
                     expenses = financeData.fixedExpenses,
                     onAddExpense = { name, amount -> viewModel.addFixedExpense(name, amount) },
@@ -122,7 +158,7 @@ fun MainScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Текущие расходы
+                // 4. Текущие расходы
                 CurrentExpensesSection(
                     expenses = financeData.currentExpenses,
                     onAddExpense = { name, amount -> viewModel.addCurrentExpense(name, amount) },
@@ -130,26 +166,12 @@ fun MainScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Доходы
+                // 5. Доходы
                 IncomeSection(
                     currentIncome = financeData.monthlyIncome,
                     onIncomeUpdate = { viewModel.updateMonthlyIncome(it) },
                     modifier = Modifier.fillMaxWidth()
                 )
-            }
-        }
-
-        // Ошибка
-        error?.let {
-            Snackbar(
-                modifier = Modifier.padding(16.dp),
-                action = {
-                    TextButton(onClick = { viewModel.clearError() }) {
-                        Text("ОК")
-                    }
-                }
-            ) {
-                Text(it)
             }
         }
     }
