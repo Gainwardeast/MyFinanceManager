@@ -10,8 +10,6 @@ import com.example.myfinancemanager.repository.IncomeRepository
 class MainApplication : Application() {
 
         val database by lazy { AppDatabase.getInstance(this) }
-
-        // Отдельные репозитории
         private val incomeRepository by lazy { IncomeRepository(database.incomeDao()) }
         private val expenseRepository by lazy { ExpenseRepository(database.expenseDao()) }
 
