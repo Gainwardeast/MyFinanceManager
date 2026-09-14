@@ -14,15 +14,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myfinancemanager.model.FixedExpense
+import com.example.myfinancemanager.model.Expense
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FixedExpensesSection(
-    expenses: List<FixedExpense>,
+    expenses: List<Expense>,
     onAddExpense: (String, Double) -> Unit,
-    onRemoveExpense: (Int) -> Unit,
-    onTogglePaid: (Int) -> Unit,
+    onRemoveExpense: (Long) -> Unit,
+    onTogglePaid: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDialog by remember { mutableStateOf(false) }
@@ -96,7 +96,7 @@ fun FixedExpensesSection(
 
 @Composable
 fun FixedExpenseItem(
-    expense: FixedExpense,
+    expense: Expense,
     onTogglePaid: () -> Unit,
     onRemove: () -> Unit
 ) {

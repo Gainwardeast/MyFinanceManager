@@ -15,5 +15,6 @@ data class ExpenseEntity(
     val type: ExpenseType,           // обязательный / необязательный
     val comment: String? = null,     // комментарий
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isPaid: Boolean = false,       // ← для обязательных: оплачено/нет
 )

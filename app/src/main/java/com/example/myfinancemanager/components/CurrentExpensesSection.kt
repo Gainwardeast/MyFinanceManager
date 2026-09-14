@@ -29,14 +29,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myfinancemanager.formatDateHuman
-import com.example.myfinancemanager.model.CurrentExpense
+import com.example.myfinancemanager.model.Expense
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurrentExpensesSection(
-    expenses: List<CurrentExpense>,
+    expenses: List<Expense>,
     onAddExpense: (String, Double) -> Unit,
-    onRemoveExpense: (Int) -> Unit,
+    onRemoveExpense: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDialog by remember { mutableStateOf(false) }
@@ -109,7 +109,7 @@ fun CurrentExpensesSection(
 
 @Composable
 fun CurrentExpenseItem(
-    expense: CurrentExpense,
+    expense: Expense,
     onRemove: () -> Unit
 ) {
     Surface(

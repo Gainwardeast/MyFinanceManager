@@ -1,5 +1,8 @@
 package com.example.myfinancemanager.model
 
+import com.example.myfinancemanager.data.ExpenseType
+import java.math.BigDecimal
+
 data class ExpenseCategory(
     val name: String,
     val amount: Double,
@@ -7,21 +10,24 @@ data class ExpenseCategory(
 )
 
 data class FinanceData(
-    val monthlyIncome: Double = 0.0,
-    val fixedExpenses: List<FixedExpense> = emptyList(),
-    val currentExpenses: List<CurrentExpense> = emptyList()
+    val incomes: List<Income> = emptyList(),
+    val expenses: List<Expense> = emptyList()
 )
 
-data class FixedExpense(
-    val id: Int,
+data class Expense(
+    val id: Long = 0,
     val name: String,
-    val amount: Double,
-    val isPaid: Boolean = false
+    val amount: BigDecimal,
+    val date: Long = System.currentTimeMillis(),
+    val type: ExpenseType,
+    val comment: String? = null,
+    val isPaid: Boolean = false,
 )
 
-data class CurrentExpense(
-    val id: Int,
-    val name: String,
-    val amount: Double,
-    val date: Long = System.currentTimeMillis()
+data class Income(
+    val id: Long = 0,
+    val source: String,
+    val amount: BigDecimal,
+    val date: Long = System.currentTimeMillis(),
+    val comment: String? = null
 )

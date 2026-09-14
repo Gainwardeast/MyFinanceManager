@@ -6,24 +6,27 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface IncomeDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(income: IncomeEntity): Long
-
-    @Update
-    suspend fun update(income: IncomeEntity)
-
-    @Delete
-    suspend fun delete(income: IncomeEntity)
-
     @Query("SELECT * FROM income ORDER BY date DESC")
     fun getAll(): Flow<List<IncomeEntity>>
+
+    @Query("SELECT * FROM income WHERE date BETWEEN :from AND :to ORDER BY date DESC")
+    fun getBetween(from: Long, to: Long): Flow<List<IncomeEntity>>
 
     @Query("SELECT * FROM income WHERE id = :id")
     suspend fun getById(id: Long): IncomeEntity?
 
-    @Query("SELECT SUM(CAST(amount AS REAL)) FROM income WHERE date BETWEEN :from AND :to")
-    suspend fun getTotalBetween(from: Long, to: Long): Double?
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: IncomeEntity): Long
 
-    @Query("SELECT * FROM income WHERE date BETWEEN :from AND :to")
-    suspend fun getAllOnce(from: Long, to: Long): List<IncomeEntity>
+    @Update
+    suspend fun update(entity: IncomeEntity)
+
+    @Delete
+    suspend fun delete(entity: IncomeEntity)
+
+    @Query("SELECT * FROM income ORDER BY date DESC")
+    suspend fun getAllOnce(): List<IncomeEntity>
+
+    @Query("SELECT * FROM income WHERE date BETWEEN :from AND :to ORDER BY date DESC")
+    suspend fun getAllOnceBetween(from: Long, to: Long): List<IncomeEntity>
 }

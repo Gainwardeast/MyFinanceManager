@@ -23,7 +23,9 @@ import com.example.myfinancemanager.components.IncomeSection
 import com.example.myfinancemanager.components.MonthSelector
 import com.example.myfinancemanager.components.MonthYearPickerDialog
 import com.example.myfinancemanager.components.PieChart
+import com.example.myfinancemanager.data.ExpenseType
 import com.example.myfinancemanager.repository.FinanceRepository
+import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,7 +112,7 @@ fun MainScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (state.balance >= 0)
+                        containerColor = if (state.balance >= BigDecimal.ZERO)
                             MaterialTheme.colorScheme.secondaryContainer
                         else
                             MaterialTheme.colorScheme.errorContainer
@@ -151,25 +153,27 @@ fun MainScreen(
 
                 // 3. Обязательные расходы
                 FixedExpensesSection(
-                    expenses = financeData.fixedExpenses,
+                    expenses = financeData.expenses.filter { it.type == ExpenseType.MANDATORY },
                     onAddExpense = { name, amount -> viewModel.addFixedExpense(name, amount) },
-                    onRemoveExpense = { id -> viewModel.removeFixedExpense(id) },
-                    onTogglePaid = { id -> viewModel.toggleFixedExpensePaid(id) },
+                    onRemoveExpense = { id -> viewModel.removeExpense(id) },
+                    onTogglePaid = { id -> viewModel.toggleFixedExpensePaid(id) },   // ← вернули
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 // 4. Текущие расходы
                 CurrentExpensesSection(
-                    expenses = financeData.currentExpenses,
+                    expenses = financeData.expenses.filter { it.type == ExpenseType.OPTIONAL },
                     onAddExpense = { name, amount -> viewModel.addCurrentExpense(name, amount) },
-                    onRemoveExpense = { id -> viewModel.removeCurrentExpense(id) },
+                    onRemoveExpense = { id -> viewModel.removeExpense(id) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 // 5. Доходы
                 IncomeSection(
-                    currentIncome = financeData.monthlyIncome,
-                    onIncomeUpdate = { viewModel.updateMonthlyIncome(it) },
+                    incomes = state.monthlyIncomes,
+                    totalIncome = state.totalIncome,
+                    onAddIncome = { source, amount -> viewModel.addIncome(source, amount) },
+                    onRemoveIncome = { id -> viewModel.removeIncome(id) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

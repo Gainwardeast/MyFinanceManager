@@ -1,70 +1,69 @@
 package com.example.myfinancemanager.repository
 
+import com.example.myfinancemanager.data.AppDatabase
 import com.example.myfinancemanager.data.ExpenseEntity
 import com.example.myfinancemanager.data.ExpenseType
 import com.example.myfinancemanager.data.IncomeEntity
+import com.example.myfinancemanager.data.toModel
+import com.example.myfinancemanager.model.Expense
+import com.example.myfinancemanager.model.Income
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
 
 class FinanceRepositoryImpl(
-    private val incomeRepository: IncomeRepository,
-    private val expenseRepository: ExpenseRepository
+    db: AppDatabase
 ) : FinanceRepository {
+
+    private val expenseDao = db.expenseDao()
+    private val incomeDao = db.incomeDao()
 
     // ======================== ДОХОДЫ ========================
 
-    override fun getAllIncomes(): Flow<List<IncomeEntity>> =
-        incomeRepository.getAll()
+    override fun getAllIncomes(): Flow<List<Income>> =
+        incomeDao.getAll().map { it.map { e -> e.toModel() } }
 
-    override suspend fun getIncomeById(id: Long): IncomeEntity? =
-        incomeRepository.getById(id)
+    override fun getIncomesBetween(from: Long, to: Long): Flow<List<Income>> =
+        incomeDao.getBetween(from, to).map { it.map { e -> e.toModel() } }
 
-    override suspend fun insertIncome(income: IncomeEntity): Long =
-        incomeRepository.insert(income)
+    override suspend fun addIncome(source: String, amount: BigDecimal, date: Long) {
+        incomeDao.insert(IncomeEntity(source = source, amount = amount, date = date))
+    }
 
-    override suspend fun updateIncome(income: IncomeEntity) =
-        incomeRepository.update(income)
-
-    override suspend fun deleteIncome(income: IncomeEntity) =
-        incomeRepository.delete(income)
+    override suspend fun removeIncome(id: Long) {
+        val entity = incomeDao.getById(id) ?: return
+        incomeDao.delete(entity)
+    }
 
     // ======================== РАСХОДЫ ========================
 
-    override fun getAllExpenses(): Flow<List<ExpenseEntity>> =
-        expenseRepository.getAll()
+    override fun getAllExpenses(): Flow<List<Expense>> =
+        expenseDao.getAll().map { it.map { e -> e.toModel() } }
 
-    override fun getExpensesByType(type: ExpenseType): Flow<List<ExpenseEntity>> =
-        expenseRepository.getByType(type)
+    override fun getExpensesByType(type: ExpenseType): Flow<List<Expense>> =
+        expenseDao.getByType(type).map { it.map { e -> e.toModel() } }
 
-    override suspend fun getExpenseById(id: Long): ExpenseEntity? =
-        expenseRepository.getById(id)
+    override fun getExpensesBetween(from: Long, to: Long): Flow<List<Expense>> =
+        expenseDao.getBetween(from, to).map { it.map { e -> e.toModel() } }
 
-    override suspend fun insertExpense(expense: ExpenseEntity): Long =
-        expenseRepository.insert(expense)
-
-    override suspend fun updateExpense(expense: ExpenseEntity) =
-        expenseRepository.update(expense)
-
-    override suspend fun deleteExpense(expense: ExpenseEntity) =
-        expenseRepository.delete(expense)
-
-    // ======================== АНАЛИТИКА ========================
-
-    override val totalIncome: Flow<BigDecimal> = incomeRepository.getAll()
-        .map { list -> list.fold(BigDecimal.ZERO) { acc, item -> acc + item.amount } }
-
-    override val totalExpense: Flow<BigDecimal> = expenseRepository.getAll()
-        .map { list -> list.fold(BigDecimal.ZERO) { acc, item -> acc + item.amount } }
-
-    override val balance: Flow<BigDecimal> = combine(totalIncome, totalExpense) { income, expense ->
-        income - expense
+    override suspend fun addExpense(
+        name: String,
+        amount: BigDecimal,
+        date: Long,
+        type: ExpenseType
+    ) {
+        expenseDao.insert(
+            ExpenseEntity(name = name, amount = amount, date = date, type = type)
+        )
     }
 
-    override suspend fun getIncomeBetween(from: Long, to: Long): BigDecimal =
-        incomeRepository.getTotalBetween(from, to)
+    override suspend fun removeExpense(id: Long) {
+        val entity = expenseDao.getById(id) ?: return
+        expenseDao.delete(entity)
+    }
 
-    override suspend fun getExpenseBetween(from: Long, to: Long): BigDecimal =
-        expenseRepository.getTotalBetween(from, to)
+    override suspend fun toggleExpensePaid(id: Long) {
+        val entity = expenseDao.getById(id) ?: return
+        expenseDao.update(entity.copy(isPaid = !entity.isPaid))
+    }
 }
