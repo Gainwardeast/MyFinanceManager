@@ -19,7 +19,7 @@ class IncomeRepository(private val dao: IncomeDao) {
 
     suspend fun getTotalBetween(from: Long, to: Long): BigDecimal {
         // Суммируем в коде для точности BigDecimal
-        val items = dao.getAllOnce(from, to)
+        val items = dao.getAllOnce()
         return items.fold(BigDecimal.ZERO) { acc, item -> acc + item.amount }
     }
 }

@@ -21,7 +21,7 @@ class ExpenseRepository(private val dao: ExpenseDao) {
     suspend fun delete(expense: ExpenseEntity) = dao.delete(expense)
 
     suspend fun getTotalBetween(from: Long, to: Long): BigDecimal {
-        val items = dao.getAllOnce(from, to)
+        val items = dao.getAllOnce()
         return items.fold(BigDecimal.ZERO) { acc, item -> acc + item.amount }
     }
 }
