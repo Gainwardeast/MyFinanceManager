@@ -1,3 +1,6 @@
+import com.android.build.api.variant.FilterConfiguration
+import com.android.build.api.variant.impl.VariantOutputImpl
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -40,6 +43,24 @@ android {
 
     buildFeatures {
         compose = true
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.outputs
+            .filterIsInstance<VariantOutputImpl>()
+            .forEach { output ->
+//                val abi = output.filters.find {
+//                    it.filterType == FilterConfiguration.FilterType.ABI
+//                }?.identifier ?: "full"
+//
+//                val versionName = variant.outputs.firstOrNull()?.versionName?.get() ?: "0.0.0"
+//                val versionCode = variant.outputs.firstOrNull()?.versionCode?.get() ?: "0"
+//
+
+                output.outputFileName.set("finance_manager.apk")
+            }
     }
 }
 
